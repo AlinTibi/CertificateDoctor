@@ -1,0 +1,24 @@
+/frontend/node_modules/
+/frontend/dist/
+/frontend/wailsjs/
+/build/bin/
+/build/windows/*.syso
+/*.syso
+/artifacts/
+/coverage.out
+*.tmp
+.DS_Store
+.claude/
+
+# Never commit real certificates, keys or key stores. Test fixtures are generated in the tests.
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+*.der
+*.p7b
+*.p7c
+*.jks
+*.csr
