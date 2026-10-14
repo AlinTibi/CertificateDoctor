@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a reproducible problem using generated test certificates
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include app version, Windows version and the expected behavior. Never attach real private keys, PFX files or passwords.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Reproduction
+      description: Describe how to generate a test certificate that shows the problem (for example an OpenSSL command), and the steps in the app.
+    validations:
+      required: true

@@ -1,0 +1,30 @@
+# Validation
+
+Validated on Windows 11 x64 with Node 22.23.3, Go 1.27.0 and Wails 2.16.0.
+
+## Automated
+
+- Frontend: `npm ci`, 6 tests (escaping, validity labels, UTC dates, conversion availability, PFX password rules, file ordering), TypeScript checking and Vite production build pass.
+- Go: `go vet ./...` and `go test ./...` pass. Certificate engine statement coverage: 87%.
+- Formats: PEM chains, DER, PKCS#7 (DER and PEM), PEM with OpenSSL bag attributes, CRLF PEM, bare base64, PKCS#8/PKCS#1/EC keys, encrypted PEM keys reported, ignored CSR blocks, invalid and oversized input rejected.
+- PKCS#12: modern AES and legacy RC2 files, password required, wrong password, correct password, passwordless certificate-only stores.
+- Checks: complete chain from out-of-order files, missing intermediate, root not provided, gap between leaf and root, expired, not yet valid, expiring soon at different thresholds, issuer expiring first, key mismatch, same-name issuer that did not sign, key without certificate, self-signed, weak RSA key, bundle order.
+- Conversions: PEM chain, PEM chain with key, key only, DER, P7B and PFX for RSA and ECDSA keys, parsed back successfully; short PFX passwords and conversions without a matching key are refused.
+- Writes: source files and existing files are never overwritten (including a different-case path); new files are created.
+- Reports: HTML and JSON contain fingerprints and no password or key material; HTML escapes file names and has no scripts or remote resources.
+- App: unlocking with an empty, wrong and correct password; raw PFX data is released after loading; unsupported and missing files are rejected; threshold changes; closing files forgets keys.
+- OpenSSL 3.5 interoperability: OpenSSL-generated PEM, key, P7B and PFX files load and match; Certificate Doctor PFX and P7B outputs are read by OpenSSL.
+- Windows `certutil -dump` reads a Certificate Doctor PFX (chain and key, "Encryption test passed") and P7B.
+
+## Interface
+
+- The production frontend with the real Go backend was exercised through `wails dev` in a browser: loading six synthetic files, wrong PFX password message next to the file, successful unlock, complete chains, key matches, expiring-soon warning, convert dialog with key-dependent options and PFX password validation, and the HTML report layout.
+- The screenshots in `docs/` were captured from that interface with synthetic "Contoso Demo" certificates generated for the purpose.
+- Production build: `wails build -clean -s -webview2 browser` passes. Executable metadata: Certificate Doctor, ALMARFELD, 1.0.0.
+- Portable package: the ZIP extracted into a folder whose path contains spaces starts `CertificateDoctor.exe` with the window title "Certificate Doctor", from an unrelated working directory.
+
+## Not yet verified manually
+
+Explorer drag and drop, the native Open/Save dialogs in the packaged executable, opening files passed on the command line, the missing-WebView2 message, and taskbar/Alt+Tab icon rendering. These paths use the same code as CSV Doctor but were not exercised for this release.
+
+The executable is not Authenticode signed.
