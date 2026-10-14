@@ -3,7 +3,7 @@ module github.com/AlinTibi/CertificateDoctor
 go 1.27.0
 
 require (
-	github.com/wailsapp/go-webview2 v1.0.22
+	github.com/wailsapp/go-webview2 v1.0.23
 	github.com/wailsapp/wails/v2 v2.16.0
 	software.sslmate.com/src/go-pkcs12 v0.7.4
 )
