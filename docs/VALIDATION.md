@@ -34,3 +34,13 @@ The executable is not Authenticode signed.
 The invalid MD5-RSA chain and retained closed-file references were independently reproduced before correction using generated certificates/keys in disposable copies of the project. Regression tests now reject an unverified MD5 issuer/root, verify valid SHA-1 signatures and reject corrupted SHA-1 signatures, and check individual/all-file content release.
 
 `go vet ./...`, Go tests, all 6 frontend tests, TypeScript/Vite production build, and the clean Windows Wails production build pass locally. No dependencies were changed. Full packaged Windows interface checks are recorded separately after execution; previous v1.0.0 manual gaps above are historical and are not retroactively claimed as tested.
+
+### Packaged Windows v1.0.1 RC.2 checks
+
+On Windows 11, the freshly extracted portable RC.2 launched from a directory containing spaces. The real native Open dialog loaded PEM/key/PFX files together and reported malformed and unsupported inputs clearly. Unlocking the generated PFX succeeded and its key matched the certificate. Incomplete file inspection remained an error until the invalid file was closed; closing it removed the stale finding.
+
+Native JSON export created a parseable report containing the uninspected file and no private-key blocks or synthetic PFX password. Cancelling a second export created no file. Native PEM conversion produced a new copy with certificate DER bytes identical to the original. Every original synthetic input retained its SHA-256.
+
+The portable EXE also launched in Windows Sandbox without source/build directories. That Sandbox image already includes WebView2. Its window and taskbar showed the Certificate Doctor icon, and Explorer showed the packaged executable icon; the ICO contains 16, 32, 48, 64, 128 and 256 pixel frames.
+
+Missing-runtime validation: not safely reproduced as a true absent-runtime environment. The standard Sandbox contains WebView2, and a separate disposable runtime-discovery simulation did not yield a verifiable result. No host runtime, registry or Windows security setting was altered. Explorer cross-window drag/drop and Alt+Tab rendering are not claimed as manually verified. Backend AddFiles and all supported conversion round trips are covered by automated tests.
