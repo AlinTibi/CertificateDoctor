@@ -236,8 +236,12 @@ func (a *App) RemoveFile(id string) View {
 	for _, f := range a.files {
 		if f.id != id {
 			kept = append(kept, f)
+		} else {
+			f.data = nil
+			f.parsed = nil
 		}
 	}
+	clear(a.files[len(kept):])
 	a.files = kept
 	return a.view(nil)
 }
@@ -246,6 +250,11 @@ func (a *App) RemoveFile(id string) View {
 func (a *App) Clear() View {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	for _, f := range a.files {
+		f.data = nil
+		f.parsed = nil
+	}
+	clear(a.files)
 	a.files = nil
 	return a.view(nil)
 }

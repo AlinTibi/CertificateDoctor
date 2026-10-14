@@ -79,12 +79,7 @@ func IsSelfSigned(c *x509.Certificate) bool {
 		return false
 	}
 	err := c.CheckSignature(c.SignatureAlgorithm, c.RawTBSCertificate, c.Signature)
-	return err == nil || isInsecureAlgorithm(err)
-}
-
-func isInsecureAlgorithm(err error) bool {
-	_, ok := err.(x509.InsecureAlgorithmError)
-	return ok
+	return err == nil
 }
 
 // DisplayName returns the common name, or the full distinguished name when there is none.

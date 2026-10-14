@@ -7,5 +7,5 @@
  "frontend:dev:watcher":"npm run dev",
  "frontend:dev:serverUrl":"auto",
  "author":{"name":"AlinTibi","email":"contact@almarfeld.com"},
- "info":{"productName":"Certificate Doctor","productVersion":"1.0.0","companyName":"ALMARFELD","copyright":"Copyright (c) 2026 AlinTibi","comments":"Offline certificate inspection, chain checks and conversion"}
+ "info":{"productName":"Certificate Doctor","productVersion":"1.0.1","companyName":"ALMARFELD","copyright":"Copyright (c) 2026 AlinTibi","comments":"Offline certificate inspection, chain checks and conversion"}
 }

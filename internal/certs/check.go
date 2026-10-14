@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -164,15 +165,14 @@ func PublicKeysEqual(a, b crypto.PublicKey) bool {
 	return ok && eq.Equal(b)
 }
 
-// signedBy reports whether parent's key verified child's signature. SHA-1 and
-// other algorithms rejected as insecure are accepted for path building and
-// reported separately as weak signatures.
+// signedBy requires successful cryptographic verification. An unsupported or
+// insecure algorithm error is not evidence that the signature is valid.
 func signedBy(child, parent *x509.Certificate) bool {
 	if !bytes.Equal(child.RawIssuer, parent.RawSubject) {
 		return false
 	}
 	err := parent.CheckSignature(child.SignatureAlgorithm, child.RawTBSCertificate, child.Signature)
-	return err == nil || isInsecureAlgorithm(err)
+	return err == nil
 }
 
 // Issuer returns the provided certificate that issued c, preferring the newest.
@@ -232,7 +232,7 @@ func Analyze(inputs []Input, now time.Time, soonDays int) Analysis {
 	}
 	set := NewSet(inputs)
 	a := Analysis{
-		Tool:             "Certificate Doctor 1.0.0",
+		Tool:             "Certificate Doctor 1.0.1",
 		GeneratedAt:      now.UTC().Truncate(time.Second),
 		ExpiringSoonDays: soonDays,
 		Counts:           map[Severity]int{},
@@ -288,6 +288,9 @@ func Analyze(inputs []Input, now time.Time, soonDays int) Analysis {
 			case x509.SHA1WithRSA, x509.ECDSAWithSHA1, x509.DSAWithSHA1, x509.MD5WithRSA, x509.MD2WithRSA:
 				add(Finding{SeverityWarning, "weak-signature", "Weak signature: " + name, d.SignatureAlgorithm + " signatures are rejected by modern clients.", d.ID})
 			}
+		}
+		if c.SignatureAlgorithm == x509.MD5WithRSA || c.SignatureAlgorithm == x509.MD2WithRSA {
+			add(Finding{SeverityError, "signature-unverified", "Signature not verified: " + name, d.SignatureAlgorithm + " cannot be verified by this application. This certificate is not accepted as a verified issuer or self-signed root.", d.ID})
 		}
 	}
 
@@ -353,6 +356,13 @@ func Analyze(inputs []Input, now time.Time, soonDays int) Analysis {
 		}
 		for _, p := range set.Certs {
 			if p != c && bytes.Equal(c.RawIssuer, p.RawSubject) {
+				err := p.CheckSignature(c.SignatureAlgorithm, c.RawTBSCertificate, c.Signature)
+				var insecure x509.InsecureAlgorithmError
+				if errors.As(err, &insecure) || errors.Is(err, x509.ErrUnsupportedAlgorithm) {
+					// Unsupported verification must not be described as a proven
+					// signature mismatch or accepted as a successful check.
+					break
+				}
 				add(Finding{SeverityError, "signature-mismatch", "Issuer signature does not verify: " + DisplayName(c, true), fmt.Sprintf("A certificate named %q was provided, but it did not sign this certificate. It may be a different generation of the issuer.", DisplayName(p, true)), CertificateID(c)})
 				break
 			}

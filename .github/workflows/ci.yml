@@ -35,7 +35,7 @@ jobs:
           $Version = go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2
           go install "github.com/wailsapp/wails/v2/cmd/wails@$Version"
       - run: wails build -clean -s -webview2 browser
-      - run: ./scripts/package.ps1 -Version 1.0.0-ci.${{ github.run_number }}
+      - run: ./scripts/package.ps1 -Version 1.0.1-ci.${{ github.run_number }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: CertificateDoctor-ci-win-x64

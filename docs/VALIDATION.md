@@ -28,3 +28,9 @@ Validated on Windows 11 x64 with Node 22.23.3, Go 1.27.0 and Wails 2.16.0.
 Explorer drag and drop, the native Open/Save dialogs in the packaged executable, opening files passed on the command line, the missing-WebView2 message, and taskbar/Alt+Tab icon rendering. These paths use the same code as CSV Doctor but were not exercised for this release.
 
 The executable is not Authenticode signed.
+
+## v1.0.1 correction validation
+
+The invalid MD5-RSA chain and retained closed-file references were independently reproduced before correction using generated certificates/keys in disposable copies of the project. Regression tests now reject an unverified MD5 issuer/root, verify valid SHA-1 signatures and reject corrupted SHA-1 signatures, and check individual/all-file content release.
+
+`go vet ./...`, Go tests, all 6 frontend tests, TypeScript/Vite production build, and the clean Windows Wails production build pass locally. No dependencies were changed. Full packaged Windows interface checks are recorded separately after execution; previous v1.0.0 manual gaps above are historical and are not retroactively claimed as tested.
