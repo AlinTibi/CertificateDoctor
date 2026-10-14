@@ -70,7 +70,12 @@ func TestIncompleteInspectionIsNotReportedAsClean(t *testing.T) {
 		t.Fatal("locked file inspection reported as clean")
 	}
 	view = app.RemoveFile(fileByName(view, "site.pfx").ID)
-	if view.Analysis.Verdict != certs.SeverityOK {
-		t.Fatal("closed incomplete files leave stale findings")
+	if view.Analysis.Counts[certs.SeverityError] != 0 || len(view.Files) != 1 {
+		t.Fatal("closed incomplete files leave stale errors or file entries")
+	}
+	for _, finding := range view.Analysis.Findings {
+		if finding.Code == "file-not-inspected" || finding.Code == "password-required" {
+			t.Fatal("closed incomplete files leave stale findings")
+		}
 	}
 }
