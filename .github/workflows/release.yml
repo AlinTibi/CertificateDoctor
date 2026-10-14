@@ -1,0 +1,77 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+env:
+  GOFLAGS: -trimpath
+jobs:
+  portable:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Verify signed release tag and select exact source
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $tag = $env:RELEASE_TAG
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw 'Invalid release tag.' }
+          git fetch --force origin "refs/tags/${tag}:refs/tags/${tag}"
+          if ($LASTEXITCODE -ne 0) { throw 'Tag fetch failed.' }
+          if ((git cat-file -t "refs/tags/$tag") -ne 'tag') { throw 'Annotated tag required.' }
+          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag "refs/tags/$tag"
+          if ($LASTEXITCODE -ne 0) { throw 'Tag signature failed.' }
+          $commit = git rev-list -n 1 "refs/tags/$tag"
+          git merge-base --is-ancestor $commit origin/main
+          if ($LASTEXITCODE -ne 0) { throw 'Release commit is not on main.' }
+          git checkout --detach $commit
+          if ($LASTEXITCODE -ne 0) { throw 'Release checkout failed.' }
+          $version = (Get-Content wails.json -Raw | ConvertFrom-Json).info.productVersion
+          if ($tag -ne "v$version") { throw 'Tag/configuration version mismatch.' }
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Install exact Wails CLI
+        shell: pwsh
+        run: |
+          $version = go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2
+          go install "github.com/wailsapp/wails/v2/cmd/wails@$version"
+          if ($LASTEXITCODE -ne 0) { throw 'Wails install failed.' }
+      - run: wails build -clean -s -webview2 browser
+      - run: ./scripts/package.ps1
+      - name: Attest release artifact provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: artifacts/CertificateDoctor-v*-win-x64.zip
+      - name: Publish intentional tagged release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $tag = $env:RELEASE_TAG
+          $zip = "artifacts/CertificateDoctor-$tag-win-x64.zip"
+          gh release create $tag $zip "$zip.sha256" --verify-tag --title "Certificate Doctor $tag" --notes-file RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

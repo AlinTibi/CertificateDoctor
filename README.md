@@ -4,9 +4,9 @@
 
 An offline Windows utility from ALMARFELD for X.509 certificate files. See what a certificate contains, find a missing intermediate or a key that does not match, and convert between PEM, DER, P7B and PFX without uploading anything.
 
-**Certificate Doctor v1.0.0**
+**Certificate Doctor v1.0.1**
 
-[Download the portable ZIP](https://github.com/AlinTibi/CertificateDoctor/releases/download/v1.0.0/CertificateDoctor-v1.0.0-win-x64.zip) · [Release notes and checksums](https://github.com/AlinTibi/CertificateDoctor/releases/tag/v1.0.0) · [Product page](https://almarfeld.com/software/certificate-doctor/)
+[Download the portable ZIP](https://github.com/AlinTibi/CertificateDoctor/releases/download/v1.0.1/CertificateDoctor-v1.0.1-win-x64.zip) · [Release notes and checksums](https://github.com/AlinTibi/CertificateDoctor/releases/tag/v1.0.1) · [Product page](https://almarfeld.com/software/certificate-doctor/)
 
 ![Certificate Doctor showing findings, files and a complete chain for synthetic demo certificates](docs/main.jpg)
 
@@ -60,10 +60,10 @@ Windows 10/11 x64. Extract the entire portable ZIP into a folder and run **Certi
 The executable is **not Authenticode signed**, so Windows SmartScreen may show a warning. Verify the download with the published SHA-256 checksum first:
 
 ```powershell
-Get-FileHash .\CertificateDoctor-v1.0.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\CertificateDoctor-v1.0.1-win-x64.zip -Algorithm SHA256
 ```
 
-Compare the result with `CertificateDoctor-v1.0.0-win-x64.zip.sha256` from the release page. Do not disable Windows security.
+Compare the result with `CertificateDoctor-v1.0.1-win-x64.zip.sha256` from the release page. Do not disable Windows security.
 
 ## How to use it
 
@@ -94,7 +94,7 @@ go vet ./...
 go test ./...
 go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 wails build -clean -s -webview2 browser
-./scripts/package.ps1 -Version 1.0.0
+./scripts/package.ps1 -Version 1.0.1
 ```
 
 All test certificates and keys are generated during the tests; none are stored in the repository. Tests cover every supported format, PFX password handling, chain building, missing issuers, signature mismatches, expiry states, weak keys, key matching, all conversions as round trips, OpenSSL interoperability (when `openssl` is available), never-overwrite behavior and reports without secrets.
