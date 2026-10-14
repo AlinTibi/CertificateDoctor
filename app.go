@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -104,6 +105,32 @@ func (a *App) view(rejected []string) View {
 		v.Files = append(v.Files, fv)
 	}
 	v.Analysis = certs.Analyze(inputs, a.now(), a.soonDays)
+	for _, f := range a.files {
+		if f.state != "error" && f.state != "password" {
+			continue
+		}
+		reason, severity, code := f.err, certs.SeverityError, "file-not-inspected"
+		if f.state == "password" {
+			severity, code = certs.SeverityWarning, "password-required"
+			if reason == "" {
+				reason = "Enter the PFX password to inspect this file."
+			}
+		}
+		v.Analysis.Files = append(v.Analysis.Files, certs.FileSummary{Name: f.name, Notes: []string{"Not inspected: " + reason}})
+		v.Analysis.Findings = append(v.Analysis.Findings, certs.Finding{Severity: severity, Code: code, Title: "File not inspected: " + f.name, Detail: reason})
+		v.Analysis.Counts[severity]++
+	}
+	if v.Analysis.Counts[certs.SeverityError] > 0 {
+		v.Analysis.Verdict = certs.SeverityError
+		v.Analysis.VerdictText = "Problems need attention. Review findings and files that were not inspected."
+	} else if v.Analysis.Counts[certs.SeverityWarning] > 0 {
+		v.Analysis.Verdict = certs.SeverityWarning
+		v.Analysis.VerdictText = "Warnings need review. Some checks or files may be incomplete."
+	}
+	order := map[certs.Severity]int{certs.SeverityError: 0, certs.SeverityWarning: 1, certs.SeverityInfo: 2, certs.SeverityOK: 3}
+	sort.SliceStable(v.Analysis.Findings, func(i, j int) bool {
+		return order[v.Analysis.Findings[i].Severity] < order[v.Analysis.Findings[j].Severity]
+	})
 	return v
 }
 

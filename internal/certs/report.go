@@ -61,7 +61,7 @@ ol{margin:0;padding-left:20px}footer{margin-top:32px;color:var(--muted);font-siz
 <div class="muted">{{count . "error"}} error(s) · {{count . "warning"}} warning(s) · {{count . "info"}} note(s) · {{count . "ok"}} passed</div></div>
 
 <h2>Files</h2>
-<div class="card"><table>{{range .Files}}<tr><th>{{.Name}}</th><td>{{.Format}} · {{.Certificates}} certificate(s) · {{.Keys}} private key(s){{range .Notes}}<br><span class="muted">{{.}}</span>{{end}}</td></tr>{{end}}</table></div>
+<div class="card"><table>{{range .Files}}<tr><th>{{.Name}}</th><td>{{if .Format}}{{.Format}} · {{.Certificates}} certificate(s) · {{.Keys}} private key(s){{else}}Not inspected{{end}}{{range .Notes}}<br><span class="muted">{{.}}</span>{{end}}</td></tr>{{end}}</table></div>
 
 <h2>Findings</h2>
 {{range .Findings}}<div class="card"><span class="tag {{.Severity}}">{{upper (print .Severity)}}</span><strong>{{.Title}}</strong><div class="muted">{{.Detail}}</div></div>{{end}}
