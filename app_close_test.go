@@ -6,6 +6,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"github.com/AlinTibi/CertificateDoctor/internal/certs"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -34,5 +36,41 @@ func TestClearReleasesAllLoadedContent(t *testing.T) {
 	app.Clear()
 	if app.files != nil || backing[0] != nil || backing[1] != nil || first.data != nil || second.parsed != nil {
 		t.Fatal("Close all retains loaded content or references")
+	}
+}
+
+func TestIncompleteInspectionIsNotReportedAsClean(t *testing.T) {
+	dir, _ := writeFixtures(t)
+	app := NewApp()
+	view, err := app.AddFiles([]string{filepath.Join(dir, "site.crt"), filepath.Join(dir, "broken.pem"), filepath.Join(dir, "site.pfx")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if view.Analysis.Verdict != certs.SeverityError || view.Analysis.Counts[certs.SeverityError] == 0 || view.Analysis.Counts[certs.SeverityWarning] == 0 {
+		t.Fatal("incomplete inspection reported as clean")
+	}
+	for _, format := range []string{"json", "html"} {
+		var report []byte
+		if format == "json" {
+			report, err = certs.ReportJSON(view.Analysis)
+		} else {
+			report, err = certs.ReportHTML(view.Analysis)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"broken.pem", "site.pfx", "Not inspected"} {
+			if !strings.Contains(string(report), name) {
+				t.Fatalf("%s report omits %s", format, name)
+			}
+		}
+	}
+	view = app.RemoveFile(fileByName(view, "broken.pem").ID)
+	if view.Analysis.Verdict != certs.SeverityWarning {
+		t.Fatal("locked file inspection reported as clean")
+	}
+	view = app.RemoveFile(fileByName(view, "site.pfx").ID)
+	if view.Analysis.Verdict != certs.SeverityOK {
+		t.Fatal("closed incomplete files leave stale findings")
 	}
 }

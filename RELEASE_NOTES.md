@@ -2,6 +2,7 @@
 
 - Requires successful cryptographic signature verification before accepting an issuer or a self-signed root. MD5/MD2 verification is unavailable and is reported explicitly, rather than treated as successful.
 - Releases loaded file/key references when closing one file or all files. This removes application references; it does not promise cryptographic erasure of process memory.
+- Includes unreadable and password-locked files in summary findings and exported reports, instead of presenting incomplete inspection as a clean result.
 - Fixes CodeQL workflow permissions and adds signed-tag release automation.
 
 Revocation, trust-store and hostname checks remain unavailable. Processing remains offline; originals and existing output files are never overwritten. Microsoft Edge WebView2 Runtime is required separately. Windows binaries are not Authenticode signed.
